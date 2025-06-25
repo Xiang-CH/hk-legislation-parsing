@@ -1,0 +1,5 @@
+parsed_data/
+raw_legislation/
+
+__pycache__/
+.env
