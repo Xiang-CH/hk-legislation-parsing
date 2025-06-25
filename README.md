@@ -11,3 +11,8 @@ This repository contains the code for processing / parsing Hong Kong legislation
     - The source files are downloaded to the `raw_legislation` directory.
     - This will take a few minutes to download all the files.
 2. Run the `parse.py` script to parse the source files.
+    ```bash
+    pip install -r requirements.txt
+    python parse.py
+    ```
+    - The parsed files are saved to the `parsed_data` directory.
