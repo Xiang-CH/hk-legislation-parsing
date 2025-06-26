@@ -4,3 +4,4 @@ raw_legislation/
 __pycache__/
 .env
 .DS_Store
+.venv/

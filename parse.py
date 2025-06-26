@@ -143,6 +143,7 @@ for lang in ['en']:
                         "url": url.replace("full", sec_name),
                         "eleg_url": "https://www.elegislation.gov.hk" + identifier + "?xpid=" + xpid,
                         "interp_terms": interp_terms,
+                        "ref_tags": references,
                         "references": []
                     })
 
