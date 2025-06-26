@@ -4,9 +4,12 @@ import json
 import os
 import re
 from markdownify import markdownify as md
+from section2md import section2md
 
 # Debug flag to control verbose output
 DEBUG = True
+# Flag to control whether to overwrite existing parsed files
+OVERWRITE = True
 # Output directory for parsed legislation data
 BASE_PATH = "parsed_data"
 # Directory containing raw legislation XML files
@@ -17,7 +20,10 @@ def normalize_whitespace(text):
     Standardize whitespace in text by replacing multiple spaces with a single space
     and trimming leading/trailing whitespace.
     """
-    return re.sub(r'\s{2,}', ' ', text).strip()
+    # text = re.sub(r'[ \x0B\f]{2,}', ' ', text)
+    # text = re.sub(r'[\n\r]{3,}', '\n\n', text)
+    # return text.strip()
+    return re.sub(r'\s{2,}', ' ', text)
 
 # Create output directory if it doesn't exist
 if not os.path.exists(BASE_PATH):
@@ -35,7 +41,7 @@ for lang in ['en']:
         cap = file_name.split("_")[1]  # cap number
 
         # Skip if already processed
-        if lang in os.listdir(BASE_PATH) and f"cap_{cap}_{lang}.json" in os.listdir(f"{BASE_PATH}/{lang}"):
+        if not OVERWRITE and lang in os.listdir(BASE_PATH) and f"cap_{cap}_{lang}.json" in os.listdir(f"{BASE_PATH}/{lang}"):
             continue
 
         # Load the XML file
@@ -117,7 +123,7 @@ for lang in ['en']:
 
                     sec_name = sec.get("name")
                     xpid = sec.get("id")
-                    heading = normalize_whitespace(sec.find("heading").text)
+                    heading = normalize_whitespace(sec.find("heading").get_text(separator=" ", strip=True).strip())
                         
                     # Convert tables to markdown format
                     for table in sec.find_all("table"):
@@ -130,8 +136,9 @@ for lang in ['en']:
                         note.decompose()
 
                     # Extract section text and find interpretation terms used
-                    references = [ref.prettify() for ref in sec.find_all("ref")]
-                    section_text = normalize_whitespace(sec.get_text(separator=" ").strip())
+                    references = [ref.get_text(separator=" ", strip=True) for ref in sec.find_all("ref")]
+                    # section_text = normalize_whitespace(sec.get_text(separator=" ").strip())
+                    section_text = section2md(sec)
                     interp_terms = [interp["term"] for interp in cap_obj["interpretations"] if interp["term"].lower() in section_text.lower()]
                     
                     # Add section to legislation object
