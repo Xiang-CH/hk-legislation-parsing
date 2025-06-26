@@ -11,5 +11,5 @@ for lang in ${languages[@]}; do
     wget -O cap_601_cap_end_${lang}.zip ${base_url}hkel_c_leg_cap_601_cap_end_${lang}.zip
     unzip cap_1_cap_300_${lang}.zip -d ${lang}
     unzip cap_301_cap_600_${lang}.zip -d ${lang}
-    unzip cap_301_cap_600_${lang}.zip -d ${lang}
+    unzip cap_601_cap_end_${lang}.zip -d ${lang}
 done
