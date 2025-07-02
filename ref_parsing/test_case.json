@@ -1,0 +1,168 @@
+[
+  {
+    "vars": {
+      "cap": "1154",
+      "section": "8",
+      "subsection": "1",
+      "text": "### (1) On and from the appointed day, by virtue of this Ordinance and notwithstanding the provisions of any other Ordinance—\n\t(a) the balance sheets and profit and loss accounts of MEFIL and Emirates Bank for the accounting period of each company in which the appointed day falls shall be prepared in all respects as if the undertaking had vested in Emirates Bank pursuant to section 5 on the first day of such accounting period of MEFIL;\n\t(b) every existing provision against assets of MEFIL shall be transferred to and for all purposes be and become a provision against assets of Emirates Bank; and\n\t(c) the amount, description and character of every provision of Emirates Bank which shall come into being pursuant to paragraph (b) shall be the same in all respects as those of the corresponding existing provision immediately before such appointed day, and all enactments and rules of law shall apply to or in respect of every such provision of Emirates Bank in the same manner in all respects as they applied to or in respect of the corresponding existing provision immediately before the appointed day."
+    },
+    "assert": [
+      {
+        "type": "python",
+        "value": "file://assert.py",
+        "expected": [
+            {"type": "section", "section": "5", "cap": "1154", "subsection": null}
+        ]
+      }
+    ]
+  },
+  {
+    "vars": {
+      "cap": "59AD",
+      "section": "4",
+      "subsection": "3",
+      "text": "### (3) The Commissioner may also by notice in the Gazette set out the approved form for notification under section 6(4) and the approved method for measuring exposure to asbestos under section 15(1)(a) , as well as the approved form of health register under section 17(3) ."
+    },
+    "assert": [
+      {
+        "type": "python",
+        "value": "file://assert.py",
+        "expected": [
+            {"type": "subsection", "section": "6", "cap": "59AD", "subsection": "4"},
+            {"type": "subsection", "section": "15", "cap": "59AD", "subsection": "1"},
+            {"type": "subsection", "section": "17", "cap": "59AD", "subsection": "3"}
+        ]
+      }
+    ]
+  },
+  {
+    "vars": {
+      "cap": "59AD",
+      "section": "10",
+      "subsection": "2",
+      "text": "### (2) A proprietor shall ensure that the protective clothing is either disposed of as asbestos waste within the meaning of the Waste Disposal Ordinance ( Cap. 354 ) and the Waste Disposal (Chemical Waste) (General) Regulation ( Cap. 354 sub. leg. C ), or adequately cleaned at suitable intervals."
+    },
+    "assert": [
+      {
+        "type": "python",
+        "value": "file://assert.py",
+        "expected": [
+            {"type": "legislation", "section": null, "cap": "354", "subsection": null},
+            {"type": "legislation", "section": null, "cap": "354C", "subsection": null}
+        ]
+      }
+    ]
+  },
+  {
+    "vars": {
+      "cap": "13",
+      "section": "6",
+      "subsection": "4",
+      "text": "### (4) Despite subsection (3), a parent or guardian may appoint a guardian by a will executed in accordance with section 5 of the Wills Ordinance ( Cap. 30 )."
+    },
+    "assert": [
+      {
+        "type": "python",
+        "value": "file://assert.py",
+        "expected": [
+            {"type": "subsection", "cap": "13", "section": "6", "subsection": "3"},
+            {"type": "section", "section": "5", "cap": "30", "subsection": null}
+        ]
+      }
+    ]
+  },
+  {
+    "vars": {
+      "cap": "13",
+      "section": "12A",
+      "subsection": "2",
+      "text": "### (2) The orders specified for the purposes of subsection (1) are an order—\n\t(a) under section 10(2)(a) , 11(1)(b)(i) , 12(b)(i) or 13(2)(a) for payment of a lump sum by instalments;\n\t(b) under section 10(2)(b) or (c), 11(1)(b)(ii) or (iii), 12(b)(ii) or (iii) or 13(2)(b), (3)(a) or (4) for periodical payments or secured periodical payments."
+    },
+    "assert": [
+      {
+        "type": "python",
+        "value": "file://assert.py",
+        "expected": [
+            {"type": "subsection", "section": "10", "cap": "13", "subsection": "2"},
+            {"type": "subsection", "section": "11", "cap": "13", "subsection": "1"},
+            {"type": "section", "section": "12", "cap": "13", "subsection": null},
+            {"type": "subsection", "section": "13", "cap": "13", "subsection": "2"},
+            {"type": "subsection", "section": "13", "cap": "13", "subsection": "3"},
+            {"type": "subsection", "section": "13", "cap": "13", "subsection": "4"}
+
+        ]
+      }
+    ]
+  },
+  {
+    "vars": {
+      "cap": "13",
+      "section": "16",
+      "subsection": "1",
+      "text": "### (1) Notwithstanding section 63 of the District Court Ordinance ( Cap. 336 ), there shall be no appeal from an interim order under section 13(3) or (4) if the appeal relates only to a provision requiring payments to be made towards the maintenance of a minor. [cf. 1973 c. 29 s. 5(1) U.K.]"
+    },
+    "assert": [
+      {
+        "type": "python",
+        "value": "file://assert.py",
+        "expected": [
+            {"type": "section", "section": "63", "cap": "336", "subsection": null},
+            {"type": "subsection", "section": "13", "cap": "13", "subsection": "3"},
+            {"type": "subsection", "section": "13", "cap": "13", "subsection": "4"}
+        ]
+      }
+    ]
+  },
+  {
+    "vars": {
+      "cap": "106Y",
+      "section": "2",
+      "subsection": null,
+      "text": "## 2. Designation of frequency bands subject to payment of spectrum utilization fee\n\nThe frequency bands set out in the Schedule are designated as the frequency bands in which the use of spectrum is subject to the payment of spectrum utilization fee by the users of the spectrum."
+    },
+    "assert": [
+      {
+        "type": "python",
+        "value": "file://assert.py",
+        "expected": [
+            {"type": "schedule", "section": "0", "cap": "106Y", "subsection": null}
+        ]
+      }
+    ]
+  },
+  {
+    "vars": {
+      "cap": "525K",
+      "section": "2",
+      "subsection": null,
+      "text": "## 2. Ordinance to apply between Hong Kong and Republic of the Philippines\n\nIn relation to the arrangements for mutual legal assistance—\n\t(a) which are applicable to the Government and the Government of the Republic of the Philippines; and\n\t(b) a copy of which is annexed at Schedule 1 ,\nit is directed that the Ordinance shall, subject to the modifications summarized in Schedule 2 , apply as between Hong Kong and the Republic of the Philippines."
+    },
+    "assert": [
+      {
+        "type": "python",
+        "value": "file://assert.py",
+        "expected": [
+            {"type": "schedule", "section": "1", "cap": "525K", "subsection": null},
+            {"type": "schedule", "section": "2", "cap": "525K", "subsection": null}
+        ]
+      }
+    ]
+  },
+  {
+    "vars": {
+      "cap": "106AA",
+      "section": "4B",
+      "subsection": "1",
+      "text": "### (1) The annual fee referred to in section 2(2)(b) shall be determined as follows—\n\t(a) for each period of 12 months beginning with 30 September from 30 September 2009 to 29 September 2011, $145 for every 1 kHz or part of every 1 kHz of the spectrum assigned for use by the holder of a relevant mobile carrier licence or relevant unified carrier licence (as the case may be); and\n\t(b) for each period of 12 months beginning with 30 September from 30 September 2011 to 29 September 2021—\n\t\t(i) 5% of the network turnover in the period of 12 months concerned; or\n\t\t(ii) $1,450 for every 1 kHz or part of every 1 kHz of the spectrum assigned for use by the holder of a relevant mobile carrier licence or relevant unified carrier licence (as the case may be),\nwhichever is the higher for the period of 12 months concerned. "
+    },
+    "assert": [
+      {
+        "type": "python",
+        "value": "file://assert.py",
+        "expected": [
+            {"type": "subsection", "section": "2", "cap": "106AA", "subsection": "2"}
+        ]
+      }
+    ]
+  }
+]

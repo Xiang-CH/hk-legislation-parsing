@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+
+# Learn more about building a configuration: https://promptfoo.dev/docs/configuration/guide
+
+description: "Extract cross references from Hong Kong Legislation"
+
+prompts:
+  - file://custom_provider.py:create_prompt
+
+providers:
+  - file://custom_provider.py
+
+
+tests:
+  - file://test_case.json
+
