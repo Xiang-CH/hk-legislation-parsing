@@ -1,5 +1,10 @@
 import re
 import bs4
+import tiktoken
+
+SECTION_TITLE_LEVEL = "##"
+SUBSECTION_TITLE_LEVEL = "###"
+TOKEN_ENCODER = "o200k_base"
 
 def normalize_whitespace(text):
     """
@@ -10,16 +15,24 @@ def normalize_whitespace(text):
 
 
 def getContentBefore(para, name):
-        content_before = ""
-        for child in para.children:
-            if isinstance(child, bs4.Tag) and child.name == name:
-                break
-            child_content = normalize_whitespace(child.get_text(separator=" ", strip=True)).strip()
-            if child_content: 
-                content_before += child_content + " "
-        return content_before.strip()
+    """
+    Helper function to get the content before the first tag of a given name in a paragraph.
+    """
+    content_before = ""
+    for child in para.children:
+        if isinstance(child, bs4.Tag) and child.name == name:
+            break
+        child_content = normalize_whitespace(child.get_text(separator=" ", strip=True)).strip()
+        if child_content: 
+            content_before += child_content + " "
+    return content_before.strip()
+
 
 def parseInnerParagraph(para):
+    """
+    Parse any tag that contains inner paragraphs and subparagraphs.
+    Returns the content before the first paragraph and the text of all paragraphs.
+    """
     paragraph_text = ""
     content_before = getContentBefore(para, "paragraph")
     for para in para.find_all("paragraph"):
@@ -36,45 +49,65 @@ def parseInnerParagraph(para):
 
 
 def section2md(section):
-    text = ""
-    heading_no = None
-    tags = list(section)
+    text = ""               # final markdown text
+    heading_no = None       # temporary holder for section number 
+    tags = list(section)    # list of tags in the section
+    subsections = []
 
+    # remove source notes
     for note in section.find_all("sourceNote"):
         note.decompose()
 
     for i, tag in enumerate(tags):
         # print(tag)
+
+        # plain text not in any tag
         if isinstance(tag, bs4.NavigableString):
             text += normalize_whitespace(tag.strip())
+        
+        # heading tag
         elif tag.name == "heading":
             if heading_no:
-                text += f"## {heading_no} {normalize_whitespace(tag.get_text(separator=" ", strip=True))}\n\n"
+                text += f"{SECTION_TITLE_LEVEL} {heading_no} {normalize_whitespace(tag.get_text(separator=" ", strip=True))}\n\n"
                 heading_no = None
             else:
-                text += f"## {normalize_whitespace(tag.get_text(separator=" ", strip=True))}\n\n"
+                text += f"{SUBSECTION_TITLE_LEVEL} {normalize_whitespace(tag.get_text(separator=" ", strip=True))}\n\n"
 
+        # number tag; section number also in num tag but outside of the headings tag;
         elif tag.name == "num":
             if i + 1 < len(tags) and tags[i + 1].name == "heading":
                 heading_no = tag.text
             else:
                 text += f"{tag.text} "
 
-        elif tag.name in ["sourceNote"]:
-            continue
-
+        # subsection tag
         elif tag.name == "subsection":
+
             if tag.find("paragraph"):
                 content_before, paragraph_text = parseInnerParagraph(tag)
 
                 if content_before:
-                    text += f"### {content_before}\n{paragraph_text}\n"
+                    formatted_content = f"{SUBSECTION_TITLE_LEVEL} {content_before}\n{paragraph_text}\n"
                 else:
                     text += f"{paragraph_text}\n"
-                continue
+                    continue
+            else:
+                formatted_content = f"{SUBSECTION_TITLE_LEVEL} {normalize_whitespace(tag.get_text(separator=' ', strip=True))}\n\n"
 
-            text += f"### {normalize_whitespace(tag.get_text(separator=' ', strip=True))}\n\n"
+            text += formatted_content
+            formatted_content = formatted_content.strip()
+            subsection_token_count = len(tiktoken.get_encoding(TOKEN_ENCODER).encode(formatted_content))
 
+            # filter out very short subsections (repealed)
+            if subsection_token_count > 5:
+                subsections.append({
+                    "name": tag.get("name"),
+                    "text": formatted_content,
+                    "token_count": subsection_token_count,
+                    "ref_tags": [normalize_whitespace(str(ref)) for ref in tag.find_all("ref")]
+                })
+
+        # paragraph tag: indentation required 
         elif tag.name == "paragraph":
             if tag.find("subparagraph"):
                 text += f"\t{getContentBefore(tag, "subparagraph")}\n"
@@ -84,6 +117,7 @@ def section2md(section):
                 continue
             text += f"\t{normalize_whitespace(tag.get_text(separator=' ', strip=True))}\n"
 
+        # other tags
         else:
             if tag.find("paragraph"):
                 content_before, paragraph_text = parseInnerParagraph(tag)
@@ -91,11 +125,12 @@ def section2md(section):
                 continue
             text += f"{normalize_whitespace(tag.get_text(separator=' ', strip=True))}\n"
     
-    return text.strip()
+    return text.strip(), subsections
             
 
 
-text = """<schedule id="ID_1438402599206_001" name="sch0" reason="inEffect" startPeriod="2020-06-18" status="operational" temporalId="sch0">
+
+test_text = """<schedule id="ID_1438402599206_001" name="sch0" reason="inEffect" startPeriod="2020-06-18" status="operational" temporalId="sch0">
    <num value="0">
     Schedule
    </num>
@@ -369,5 +404,5 @@ text = """<schedule id="ID_1438402599206_001" name="sch0" reason="inEffect" star
   </schedule>"""
 
 if __name__ == "__main__":
-    soup = bs4.BeautifulSoup(text, "xml")
-    print(section2md(soup.find("schedule")))
+    soup = bs4.BeautifulSoup(test_text, "xml")
+    print(section2md(soup.find("schedule"))[0])
