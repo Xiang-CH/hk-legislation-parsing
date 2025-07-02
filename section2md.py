@@ -27,23 +27,44 @@ def getContentBefore(para, name):
             content_before += child_content + " "
     return content_before.strip()
 
+def getContentAfter(tag):
+    """
+    Helper function to get the content after the last tag of a given name in a paragraph.
+    """
+    continued = tag.find_all("continued", recursive=False)
+    if not continued:
+        return None
+    
+    content_after = "\n".join([normalize_whitespace(c.get_text(separator=" ", strip=True)) for c in continued])
+    return content_after.strip()
 
-def parseInnerParagraph(para):
+
+def parseInnerParagraph(tag):
     """
     Parse any tag that contains inner paragraphs and subparagraphs.
     Returns the content before the first paragraph and the text of all paragraphs.
     """
     paragraph_text = ""
-    content_before = getContentBefore(para, "paragraph")
-    for para in para.find_all("paragraph"):
+    content_before = getContentBefore(tag, "paragraph")
+    for para in tag.find_all("paragraph"):
         if para.find("subparagraph"):
             paragraph_text += f"\t{getContentBefore(para, "subparagraph")}\n"
             for subpara in para.find_all("subparagraph"):
                 subpara_text = f"\t\t{normalize_whitespace(subpara.get_text(separator=' ', strip=True))}\n"
                 paragraph_text += subpara_text
+
+
+            content_after = getContentAfter(para)
+            if content_after:
+                paragraph_text += f"\t{content_after}\n"
+
             continue
 
         paragraph_text += f"\t{normalize_whitespace(para.get_text(separator=' ', strip=True))}\n"
+    
+    content_after = getContentAfter(tag)
+    if content_after:
+        paragraph_text += f"{content_after}\n"
 
     return content_before, paragraph_text
 

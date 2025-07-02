@@ -81,6 +81,8 @@ for lang in ['en']:
     # Get all non-hidden files in the language directory
     files_names = [f for f in os.listdir(f"{RAW_DATA_PATH}/{lang}") if not f.startswith(".")]
 
+    total_token_lang = 0
+
     # Process each legislation file with progress bar
     for file_name in tqdm(sorted(files_names), desc=f"Parsing ({lang})"):
         # Extract chapter number from filename
@@ -244,6 +246,7 @@ for lang in ['en']:
                 #     })
 
             cap_obj["total_token_count"] = total_token_count
+            total_token_lang += total_token_count
 
             # Create language directory if it doesn't exist
             if not os.path.exists(f"{BASE_PATH}/{lang}"):
@@ -262,3 +265,4 @@ for lang in ['en']:
             
             raise e
     
+    print(f"Total token count for {lang}: {total_token_lang}")
