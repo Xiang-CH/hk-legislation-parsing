@@ -1,16 +1,20 @@
-import bs4
-from tqdm import tqdm
-import json
 import os
 import re
+import bs4
+import json
+import tiktoken
+from tqdm import tqdm
 from markdownify import markdownify as md
 from section2md import section2md, normalize_whitespace
-import tiktoken
+from inference import getReference
+
 
 # Debug flag to control verbose output
 DEBUG = True
 # Flag to control whether to overwrite existing parsed files
 OVERWRITE = True
+# Flag to control whether to parse references
+LLM_PARSE_REFERENCES = True
 # Output directory for parsed legislation data
 BASE_PATH = "parsed_data"
 # Directory containing raw legislation XML files
@@ -26,6 +30,7 @@ def processSections(sec, cap_obj):
     # Process each section
     # Skip sections that are too short, have no ID, or are not in effect, or have no heading (replealed)    
     sec_name = sec.get("temporalId")
+    sec_no = sec.get("name")[1:]
     xpid = sec.get("id")
     heading = normalize_whitespace(sec.find("heading").get_text(separator=" ", strip=True).strip()) if sec.find("heading") else None
 
@@ -51,18 +56,27 @@ def processSections(sec, cap_obj):
         table.replace_with(new_table)
 
     # Extract section text and find interpretation terms used
-    references = [normalize_whitespace(str(ref)) for ref in sec.find_all("ref")]
+    ref_tags = [normalize_whitespace(str(ref)) for ref in sec.find_all("ref")]
 
     # section_text = normalize_whitespace(sec.get_text(separator=" ").strip())
-    section_text, subsections = section2md(sec)
+    section_text, subsections = section2md(sec, cap_obj["cap_no"],sec_no, LLM_PARSE_REFERENCES)
     interp_terms = [interp["term"] for interp in cap_obj["interpretations"] if interp["term"].lower() in section_text.lower()]
 
     section_token_count = len(tiktoken.get_encoding(TOKEN_ENCODER).encode(section_text))
     identifier = cap_obj["identifier"]
     url = cap_obj["url"]
+
+    references = []
+    if len(subsections) > 0:
+        references = [r for s in subsections for r in s["references"]]
+    elif LLM_PARSE_REFERENCES and len(ref_tags) > 0:
+        try:
+            references = getReference(cap_obj["cap_no"], sec_no, None, section_text)
+        except: 
+            pass
     
     return {
-        # "no": sec_no,
+        "no": sec_no,
         "name": sec_name,
         "heading": heading,
         "text": section_text,
@@ -71,8 +85,8 @@ def processSections(sec, cap_obj):
         "url": url.replace("full", sec_name),
         "eleg_url": "https://www.elegislation.gov.hk" + identifier + "?xpid=" + xpid if xpid else None,
         "interp_terms": interp_terms,
-        "ref_tags": references,
-        "references": []
+        "ref_tags": ref_tags,
+        "references": references
     }
 
 # Process files for each language (English, Traditional Chinese, Simplified Chinese)
@@ -82,9 +96,12 @@ for lang in ['en']:
     files_names = [f for f in os.listdir(f"{RAW_DATA_PATH}/{lang}") if not f.startswith(".")]
 
     total_token_lang = 0
+    processed = 0
 
     # Process each legislation file with progress bar
     for file_name in tqdm(sorted(files_names), desc=f"Parsing ({lang})"):
+        processed += 1
+
         # Extract chapter number from filename
         cap = file_name.split("_")[1]  # cap number
 
@@ -143,7 +160,7 @@ for lang in ['en']:
                 # Create a synthetic section containing all paragraph content
                 content_tag = soup.new_tag("content")
                 content_tag.string = " ".join([normalize_whitespace(p.get_text(separator=" ").strip()) for p in paragraphs]) 
-                section_tag = soup.new_tag("section", attrs={"name": "full", "temporalId": "id"})
+                section_tag = soup.new_tag("section", attrs={"name": "s0", "temporalId": "shortTitle"})
                 num_tag = soup.new_tag("num", attrs={"value": "0"})
                 section_tag.append(num_tag)
                 section_tag.append(content_tag)
@@ -182,69 +199,6 @@ for lang in ['en']:
                         sch_data["sections"].append(processSections(sch_sec, cap_obj))
                 cap_obj["schedules"].append(sch_data)
 
-            # for type in ["sections", "schedules"]:
-
-            #     if type == "sections":
-            #         items = sections
-            #     else:
-            #         items = schedules
-
-                # Process each section
-                # for sec in items:
-                #     # Skip sections that are too short, have no ID, or are not in effect, or have no heading (replealed)
-                #     if len(sec.text) < 5 or sec.get("temporalId") is None or (sec.get("reason") and sec.get("reason") != "inEffect") or not sec.find("heading"):
-                #         continue 
-
-                #     sec_name = sec.get("name")
-                #     xpid = sec.get("id")
-                #     heading = normalize_whitespace(sec.find("heading").get_text(separator=" ", strip=True).strip())
-
-                #     # Remove source notes
-                #     for note in sec.find_all("sourceNote"):
-                #         note.decompose()
-
-                #     # Extract interpretation definitions
-                #     if len(sec.find_all("def")) > 0:
-                #         for interp in sec.find_all("def"):
-                #             if interp.find("term") is None:
-                #                 continue
-                #             cap_obj["interpretations"].append({
-                #                 "term": normalize_whitespace(interp.find("term").text),
-                #                 "text": normalize_whitespace(interp.text.strip()),
-                #                 "ref_tags": [normalize_whitespace(str(ref)) for ref in interp.find_all("ref")]
-                #             })
-                        
-                #     # Convert tables to markdown format
-                #     for table in sec.find_all("table"):
-                #         new_table = soup.new_tag("content")
-                #         new_table.string = "\n\n" + md(table.prettify()).strip() + "\n\n"
-                #         table.replace_with(new_table)
-
-                #     # Extract section text and find interpretation terms used
-                #     references = [normalize_whitespace(str(ref)) for ref in sec.find_all("ref")]
-
-                #     # section_text = normalize_whitespace(sec.get_text(separator=" ").strip())
-                #     section_text, subsections = section2md(sec)
-                #     interp_terms = [interp["term"] for interp in cap_obj["interpretations"] if interp["term"].lower() in section_text.lower()]
-
-                #     section_token_count = len(tiktoken.get_encoding(TOKEN_ENCODER).encode(section_text))
-                #     total_token_count += section_token_count
-                    
-                #     # Add section to legislation object
-                #     cap_obj[type].append({
-                #         # "no": sec_no,
-                #         "name": sec_name,
-                #         "heading": heading,
-                #         "text": section_text,
-                #         "subsections": subsections,
-                #         "token_count": section_token_count,
-                #         "url": url.replace("full", sec_name),
-                #         "eleg_url": "https://www.elegislation.gov.hk" + identifier + "?xpid=" + xpid,
-                #         "interp_terms": interp_terms,
-                #         "ref_tags": references,
-                #         "references": []
-                #     })
-
             cap_obj["total_token_count"] = total_token_count
             total_token_lang += total_token_count
 
@@ -264,5 +218,10 @@ for lang in ['en']:
                 f.write(soup.prettify())
             
             raise e
+        
+        # for debugging
+        # if processed == 4:
+        #     print(f"cap. {cap}")
+        #     exit()
     
     print(f"Total token count for {lang}: {total_token_lang}")

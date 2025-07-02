@@ -1,6 +1,7 @@
 import re
 import bs4
 import tiktoken
+from inference import getReference
 
 SECTION_TITLE_LEVEL = "##"
 SUBSECTION_TITLE_LEVEL = "###"
@@ -69,7 +70,7 @@ def parseInnerParagraph(tag):
     return content_before, paragraph_text
 
 
-def section2md(section):
+def section2md(section, cap_no, section_no, LLM_PARSE_REFERENCES=False):
     text = ""               # final markdown text
     heading_no = None       # temporary holder for section number 
     tags = list(section)    # list of tags in the section
@@ -118,6 +119,14 @@ def section2md(section):
             text += formatted_content
             formatted_content = formatted_content.strip()
             subsection_token_count = len(tiktoken.get_encoding(TOKEN_ENCODER).encode(formatted_content))
+            ref_tags = [normalize_whitespace(str(ref)) for ref in tag.find_all("ref")]
+
+            references = []
+            if LLM_PARSE_REFERENCES and len(ref_tags) > 0:
+                try:
+                    references = getReference(cap_no, section_no, tag.get("name"), formatted_content)
+                except: 
+                    pass
 
             # filter out very short subsections (repealed)
             if subsection_token_count > 5:
@@ -125,7 +134,8 @@ def section2md(section):
                     "name": tag.get("name"),
                     "text": formatted_content,
                     "token_count": subsection_token_count,
-                    "ref_tags": [normalize_whitespace(str(ref)) for ref in tag.find_all("ref")]
+                    "ref_tags": ref_tags,
+                    "references": references
                 })
 
         # paragraph tag: indentation required 
