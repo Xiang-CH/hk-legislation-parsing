@@ -12,7 +12,7 @@ from inference import getReference
 # Debug flag to control verbose output
 DEBUG = True
 # Flag to control whether to overwrite existing parsed files
-OVERWRITE = True
+OVERWRITE = False
 # Flag to control whether to parse references
 LLM_PARSE_REFERENCES = True
 # Output directory for parsed legislation data
@@ -20,6 +20,12 @@ BASE_PATH = "parsed_data"
 # Directory containing raw legislation XML files
 RAW_DATA_PATH = "raw_legislation"
 TOKEN_ENCODER = "o200k_base"
+
+interp_translation = {
+    "en": "Interpretation",
+    "tc": "釋義",
+    "sc": "释义"
+}
 
 # Create output directory if it doesn't exist
 if not os.path.exists(BASE_PATH):
@@ -43,10 +49,18 @@ def processSections(sec, cap_obj):
         for interp in sec.find_all("def"):
             if interp.find("term") is None:
                 continue
+            references = []
+            term_def = normalize_whitespace(interp.text.strip())
+            if LLM_PARSE_REFERENCES and len(ref_tags) > 0:
+                try:
+                    references = getReference(cap_obj["cap_no"], sec_no, None, term_def)
+                except: 
+                    pass
             cap_obj["interpretations"].append({
                 "term": normalize_whitespace(interp.find("term").text),
-                "text": normalize_whitespace(interp.text.strip()),
-                "ref_tags": [normalize_whitespace(str(ref)) for ref in interp.find_all("ref")]
+                "text": term_def,
+                "ref_tags": [normalize_whitespace(str(ref)) for ref in interp.find_all("ref")],
+                "references": references
             })
         
     # Convert tables to markdown format
@@ -69,6 +83,8 @@ def processSections(sec, cap_obj):
     references = []
     if len(subsections) > 0:
         references = [r for s in subsections for r in s["references"]]
+    elif interp_translation[cap_obj["language"]] in heading:
+        pass
     elif LLM_PARSE_REFERENCES and len(ref_tags) > 0:
         try:
             references = getReference(cap_obj["cap_no"], sec_no, None, section_text)
@@ -180,10 +196,11 @@ for lang in ['en']:
             for sch in schedules:
                 if len(sec.text) < 5 or sch.get("temporalId") is None or (sch.get("reason") and sch.get("reason") != "inEffect"):
                     continue
-                sch_text = section2md(sch)[0]
+                sch_text = section2md(sch, cap_obj["cap_no"], sch.get("name"), LLM_PARSE_REFERENCES)[0]
                 token_count = len(tiktoken.get_encoding(TOKEN_ENCODER).encode(sch_text))
                 total_token_count += token_count
                 sch_data = {
+                    "no": sch.get("name")[3:],
                     "name": sch.get("name"),
                     "heading": normalize_whitespace(sch.find("heading").get_text(separator=" ", strip=True).strip()) if sch.find("heading") else None,
                     "text": sch_text,

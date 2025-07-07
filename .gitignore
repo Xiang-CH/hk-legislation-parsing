@@ -4,7 +4,8 @@ raw_legislation/
 __pycache__/
 .env
 .DS_Store
-.venv/
+.venv
 
 *.xml
 promptfoo-errors.log
+temp.py
