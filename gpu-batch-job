@@ -1,0 +1,14 @@
+#!/bin/bash
+# Tell the system the resources you need. Adjust the numbers according to your need
+#SBATCH --gres=gpu:2 --cpus-per-task=4 --time=3-00:00:00
+
+# initialize uv
+source $HOME/hk-legislation-parsing/.venv/bin/activate
+
+# cd your your desired directory and execute your program, e.g.
+cd $HOME/hk-legislation-parsing
+nohup ./serve.sh > vllm.log 2>&1 &
+python parse.py
+
+
+# srun --gres=gpu:2 --cpus-per-task=4 --time=0-01:00:00 --pty bash

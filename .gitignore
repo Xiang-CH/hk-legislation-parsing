@@ -7,5 +7,7 @@ __pycache__/
 .venv
 
 *.xml
+*.out
+*.log
 promptfoo-errors.log
 temp.py

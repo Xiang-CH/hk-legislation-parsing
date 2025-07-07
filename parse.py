@@ -6,7 +6,7 @@ import tiktoken
 from tqdm import tqdm
 from markdownify import markdownify as md
 from section2md import section2md, normalize_whitespace
-from inference import getReference
+from inference import getReference, waitForLLMServer
 
 
 # Debug flag to control verbose output
@@ -44,6 +44,9 @@ def processSections(sec, cap_obj):
     for note in sec.find_all("sourceNote"):
         note.decompose()
 
+    # Extract section text and find interpretation terms used
+    ref_tags = [normalize_whitespace(str(ref)) for ref in sec.find_all("ref")]
+
     # Extract interpretation definitions
     if len(sec.find_all("def")) > 0:
         for interp in sec.find_all("def"):
@@ -59,7 +62,7 @@ def processSections(sec, cap_obj):
             cap_obj["interpretations"].append({
                 "term": normalize_whitespace(interp.find("term").text),
                 "text": term_def,
-                "ref_tags": [normalize_whitespace(str(ref)) for ref in interp.find_all("ref")],
+                "ref_tags": ref_tags,
                 "references": references
             })
         
@@ -68,9 +71,6 @@ def processSections(sec, cap_obj):
         new_table = soup.new_tag("content")
         new_table.string = "\n\n" + md(table.prettify()).strip() + "\n\n"
         table.replace_with(new_table)
-
-    # Extract section text and find interpretation terms used
-    ref_tags = [normalize_whitespace(str(ref)) for ref in sec.find_all("ref")]
 
     # section_text = normalize_whitespace(sec.get_text(separator=" ").strip())
     section_text, subsections = section2md(sec, cap_obj["cap_no"],sec_no, LLM_PARSE_REFERENCES)
@@ -83,7 +83,7 @@ def processSections(sec, cap_obj):
     references = []
     if len(subsections) > 0:
         references = [r for s in subsections for r in s["references"]]
-    elif interp_translation[cap_obj["language"]] in heading:
+    elif heading and interp_translation[cap_obj["language"]] in heading:
         pass
     elif LLM_PARSE_REFERENCES and len(ref_tags) > 0:
         try:
@@ -104,6 +104,11 @@ def processSections(sec, cap_obj):
         "ref_tags": ref_tags,
         "references": references
     }
+
+
+# Wait for llm server to start
+if LLM_PARSE_REFERENCES:
+    waitForLLMServer()
 
 # Process files for each language (English, Traditional Chinese, Simplified Chinese)
 # for lang in ['en', 'tc', 'sc']:

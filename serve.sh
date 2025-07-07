@@ -1,4 +1,4 @@
-export CUDA_VISIBLE_DEVICES=0,3
+# export CUDA_VISIBLE_DEVICES=0,3
 python -m vllm.entrypoints.openai.api_server \
   --model "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B" \
   --served-model-name "deepseek-r1-distill-qwen-32b" \
